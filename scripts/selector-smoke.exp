@@ -1,0 +1,78 @@
+#!/usr/bin/expect -f
+set timeout 20
+set root [file normalize [file join [file dirname [info script]] ..]]
+set evidence [lindex $argv 0]
+if {$evidence eq ""} { error "usage: expect scripts/selector-smoke.exp /tmp/evidence-directory" }
+file mkdir $evidence
+set env(PI_CODING_AGENT_DIR) [file join [file normalize $evidence] agent]
+set env(PI_OFFLINE) 1
+set env(TERM) xterm-256color
+log_file -noappend [file join $evidence terminal.log]
+
+proc launch {} {
+  global root spawn_id
+  spawn -noecho pi --offline --no-extensions --no-mcp --no-skills --no-prompt-templates --no-context-files --no-themes --no-session --tui-mode regular -e [file join $root tests tui-provider.ts] -e [file join $root index.ts] --provider compact-smoke --model reasoner
+  stty rows 35 columns 110 < $spawn_out(slave,name)
+  expect {
+    -re {compact-smoke|reasoner} {}
+    timeout { error "Pi startup timed out" }
+  }
+  after 800
+}
+
+proc stop {} {
+  global spawn_id
+  send -- "\003"
+  after 300
+  send -- "\003"
+  expect {
+    eof {}
+    timeout { error "Pi did not exit" }
+  }
+}
+
+launch
+send -- "/compact-model\r"
+expect {
+  -re {Compact 模型} {}
+  timeout { error "model selector not shown" }
+}
+send -- "compact-smoke/reasoner"
+after 300
+send -- "\r"
+expect {
+  -re {选择思考等级} {}
+  timeout { error "thinking selector not shown" }
+}
+after 200
+send -- "\r"
+expect {
+  -re {Compact 已设置} {}
+  timeout { error "settings not saved" }
+}
+send -- "/reload\r"
+after 1200
+send -- "/compact-model\r"
+expect {
+  -re {当前：compact-smoke/reasoner.*medium} {}
+  timeout { error "reload did not restore saved settings" }
+}
+send -- "\033"
+after 200
+stop
+
+launch
+send -- "/compact-model\r"
+expect {
+  -re {当前：compact-smoke/reasoner.*medium} {}
+  timeout { error "new process did not restore saved settings" }
+}
+send -- "compact-smoke/plain"
+after 300
+send -- "\r"
+expect {
+  -re {Compact 已设置：compact-smoke/plain.*off} {}
+  timeout { error "plain model did not skip thinking selection" }
+}
+stop
+puts "Selector smoke passed. Evidence: $evidence"
