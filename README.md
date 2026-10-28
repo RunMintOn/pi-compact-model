@@ -2,6 +2,23 @@
 
 Choose a separate model and thinking level for Pi context compaction without changing the main conversation model.
 
+## What it does to your setup
+
+You can predict exactly what this extension touches:
+
+| Question | Answer |
+|---|---|
+| Do I have to configure anything? | No. Without configuration, compaction behaves exactly like stock Pi: same main model, same thinking level, same native `compact()`. The only visible addition is a one-line startup notification and the `/compact-model` command. |
+| What changes once I configure a model? | Only the model and thinking level used to generate compaction summaries. Nothing else. |
+| Does it change my main conversation model? | Never. The main model, its thinking level, and normal replies are untouched. |
+| Does it change when compaction triggers? | No. Thresholds still come from the main model and Pi settings. Overflow recovery and `/tree` branch summaries keep Pi's behavior. |
+| Does it rewrite or reformat summaries? | No. Summaries come from Pi's native `compact()`: same format, boundaries, recent-message retention, split-turn handling, file tracking, and usage accounting. |
+| What if the configured model breaks? | That compaction is cancelled with an explicit error. There is **no silent fallback** to the main model or any other model. Run `/compact-model` to repair it. |
+| What files does it write? | Exactly one: `compact-model.json` in the Pi user directory (usually `~/.pi/agent/compact-model.json`), written atomically with mode `0600`. Delete it or pick **Follow main conversation model (default)** to return to stock behavior. |
+| Does it send anything anywhere? | No telemetry. The only network call is the compaction request to the provider you selected, made through Pi's own model registry. |
+
+In short: installing without configuring is indistinguishable from not installing, apart from the notification. Configuring replaces only the compaction model.
+
 ## Usage
 
 By default, compaction follows the **current main conversation model and thinking level**. Both are read at each compaction, so changing them in the conversation also changes subsequent compactions. This is the default behavior, not a fallback after an error.
@@ -14,7 +31,7 @@ Run `/compact-model` to customize:
 
 Select **Follow main conversation model (default)** to restore the default behavior. This removes the saved override and skips thinking-level selection.
 
-The selector title shows the current configuration. Overrides are stored in `compact-model.json` in the Pi user directory (usually `~/.pi/agent/compact-model.json`). They apply globally across projects, sessions, reloads, and restarts. Other running sessions read changes at their next compaction. In default mode, each session follows its own main model and thinking level.
+The selector title shows the current configuration. Overrides apply globally across projects, sessions, reloads, and restarts. Other running sessions read changes at their next compaction. In default mode, each session follows its own main model and thinking level.
 
 A non-blocking notification shows the active mode at session startup, including after `/reload` or session replacement. Default mode also points to `/compact-model`; configured mode shows the saved model and thinking level.
 
@@ -26,14 +43,12 @@ Automatic threshold compaction, manual `/compact`, and overflow recovery all use
 
 The extension changes the model and thinking level passed to Pi's native `compact()`. Pi still handles summary generation, summary format, compaction boundaries, recent-message retention, split-turn summaries, file tracking, and usage accounting. The extension handles configuration, validation, notifications, handoff coordination, and carrying forward file records from its own and legacy `compact-suit` summaries. Default mode is not a bypass of the extension.
 
-Compaction thresholds still depend on the main model and Pi settings. `/tree` branch summaries are not overridden.
-
 Success is reported only after the compaction is saved. Summary `details` record `compactModel`, `provider`, `model`, `thinkingLevel`, and `reason`; token usage is stored in `usage`.
 
-## Installation and composition
+## Installation
 
 ```bash
-pi install /path/to/26-pi-compact-model
+pi install npm:@runminton/pi-compact-model
 ```
 
 Run `/reload` in existing terminals. The command requires an interactive terminal; non-interactive compaction still uses the global configuration.

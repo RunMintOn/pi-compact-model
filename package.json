@@ -1,7 +1,25 @@
 {
-  "name": "pi-compact-model",
+  "name": "@runminton/pi-compact-model",
   "version": "0.1.0",
-  "private": true,
+  "description": "Choose a separate model and thinking level for Pi context compaction without changing the main conversation model.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RunMintOn/pi-compact-model.git"
+  },
+  "homepage": "https://github.com/RunMintOn/pi-compact-model#readme",
+  "bugs": {
+    "url": "https://github.com/RunMintOn/pi-compact-model/issues"
+  },
+  "files": [
+    "index.ts",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "type": "module",
   "keywords": ["pi-package"],
   "pi": { "extensions": ["./index.ts"] },
