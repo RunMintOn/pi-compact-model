@@ -6,7 +6,7 @@ export async function select(
 ): Promise<string | undefined> {
   return ctx.ui.custom<string | undefined>((tui, theme, keybindings, done) => {
     const container = new Container();
-    const input = new Input({ placeholder: "输入以搜索…" });
+    const input = new Input({ placeholder: "Type to search…" });
     const listTheme = {
       selectedPrefix: (s: string) => theme.fg("accent", s),
       selectedText: (s: string) => theme.fg("accent", s),
@@ -25,7 +25,7 @@ export async function select(
     container.addChild(new Text(title, 1, 1));
     container.addChild(input);
     container.addChild(list);
-    container.addChild(new Text("输入搜索 · ↑↓ 选择 · Enter 确认 · Esc 取消", 1, 1));
+    container.addChild(new Text("Type to search · ↑↓ Select · Enter Confirm · Esc Cancel", 1, 1));
     return {
       get focused() { return input.focused; },
       set focused(value: boolean) { input.focused = value; },

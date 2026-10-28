@@ -32,29 +32,33 @@ proc stop {} {
 }
 
 launch
+expect {
+  -re {Compaction follows the main model and thinking level} {}
+  timeout { error "default startup notification not shown" }
+}
 send -- "/compact-model\r"
 expect {
-  -re {Compact 模型} {}
+  -re {Compaction model} {}
   timeout { error "model selector not shown" }
 }
 send -- "compact-smoke/reasoner"
 after 300
 send -- "\r"
 expect {
-  -re {选择思考等级} {}
+  -re {Choose thinking level} {}
   timeout { error "thinking selector not shown" }
 }
 after 200
 send -- "\r"
 expect {
-  -re {Compact 已设置} {}
+  -re {Compaction model set} {}
   timeout { error "settings not saved" }
 }
 send -- "/reload\r"
 after 1200
 send -- "/compact-model\r"
 expect {
-  -re {当前：compact-smoke/reasoner.*medium} {}
+  -re {current: compact-smoke/reasoner.*medium} {}
   timeout { error "reload did not restore saved settings" }
 }
 send -- "\033"
@@ -62,17 +66,38 @@ after 200
 stop
 
 launch
+expect {
+  -re {Compaction model: compact-smoke/reasoner.*medium} {}
+  timeout { error "configured startup notification not shown" }
+}
 send -- "/compact-model\r"
 expect {
-  -re {当前：compact-smoke/reasoner.*medium} {}
+  -re {current: compact-smoke/reasoner.*medium} {}
   timeout { error "new process did not restore saved settings" }
 }
 send -- "compact-smoke/plain"
 after 300
 send -- "\r"
 expect {
-  -re {Compact 已设置：compact-smoke/plain.*off} {}
+  -re {Compaction model set: compact-smoke/plain.*off} {}
   timeout { error "plain model did not skip thinking selection" }
+}
+send -- "/compact-model\r"
+expect {
+  -re {current: compact-smoke/plain.*off} {}
+  timeout { error "plain model settings not restored" }
+}
+send -- "Follow main conversation model"
+after 300
+send -- "\r"
+expect {
+  -re {Compaction follows the main model and thinking level} {}
+  timeout { error "default mode not restored" }
+}
+send -- "/reload\r"
+expect {
+  -re {Compaction follows the main model and thinking level} {}
+  timeout { error "default mode not restored after reload" }
 }
 stop
 puts "Selector smoke passed. Evidence: $evidence"
